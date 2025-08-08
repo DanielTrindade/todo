@@ -8,6 +8,7 @@ import postgres from "postgres";
 import { todosTable } from "./db/schema/todos";
 import { usersTable } from "./db/schema/users";
 import { PriorityEnum } from "./types/priority";
+import { getUserId } from "./utils/get-user-id";
 
 // Validar variáveis de ambiente
 if (!process.env.DATABASE_URL) {
@@ -23,13 +24,6 @@ if (!process.env.COOKIE_SECRET) {
 // Inicializar cliente Postgres e Drizzle
 const client = postgres(process.env.DATABASE_URL);
 const db = drizzle(client);
-
-// Interface para contexto autenticado
-interface AuthContext {
-	jwt: any;
-	cookie: any;
-	set: any;
-}
 
 // Tratador global de erros
 const errorHandler = (app: Elysia) =>
@@ -78,34 +72,6 @@ const userUpdateSchema = t.Object({
 	username: t.Optional(t.String({ minLength: 3, maxLength: 50 })),
 	email: t.Optional(t.String({ format: "email" })),
 });
-
-// Função para extrair userId do JWT
-const getUserId = async (context: AuthContext): Promise<string | undefined> => {
-	const { jwt, cookie, set } = context;
-	const token = cookie.jwt.value;
-
-	if (!token) {
-		set.status = 401;
-		return undefined;
-	}
-
-	try {
-		const payload = (await jwt.verify(token)) as {
-			userId: string;
-			exp?: number;
-		};
-
-		if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
-			set.status = 401;
-			return undefined;
-		}
-
-		return payload.userId;
-	} catch {
-		set.status = 401;
-		return undefined;
-	}
-};
 
 // Construir app
 const app = new Elysia({
