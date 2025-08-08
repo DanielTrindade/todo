@@ -1,13 +1,13 @@
 export interface AuthContext {
     jwt: { verify(token: string): Promise<unknown> };
-    cookie: { jwt: { value?: string } };
-    set: { status?: number };
+    cookie: Record<string, { value?: string }>;
+    set: { status?: number | string };
 }
 
 export const getUserId = async (
     { jwt, cookie, set }: AuthContext,
 ): Promise<string | undefined> => {
-    const token = cookie.jwt.value;
+    const token = cookie.jwt?.value;
 
     if (!token) {
         set.status = 401;
