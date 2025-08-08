@@ -4,12 +4,23 @@ import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { usersTable } from "../db/schema/users";
 import { userSchema, loginSchema } from "../schemas/user";
+import type { AuthContext } from "../utils/get-user-id";
 
 export const authRoutes = new Elysia()
     // Registro
     .post(
         "/register",
-        async ({ body: { username, email, password }, jwt, cookie, set }) => {
+        async (
+            ctx: AuthContext & {
+                body: { username: string; email: string; password: string };
+            },
+        ) => {
+            const {
+                body: { username, email, password },
+                jwt,
+                cookie,
+                set,
+            } = ctx;
             try {
                 const [exists] = await db
                     .select()
@@ -30,7 +41,11 @@ export const authRoutes = new Elysia()
                     .returning();
 
                 const token = await jwt.sign({ userId: newUser.id });
-                cookie.jwt.set({ value: token, httpOnly: true, maxAge: 60 * 60 * 24 });
+                cookie.jwt!.set!({
+                    value: token,
+                    httpOnly: true,
+                    maxAge: 60 * 60 * 24,
+                });
 
                 const { password: _, salt: __, ...publicUser } = newUser;
                 return publicUser;
@@ -45,7 +60,17 @@ export const authRoutes = new Elysia()
     // Login
     .post(
         "/login",
-        async ({ body: { email, password }, jwt, cookie, set }) => {
+        async (
+            ctx: AuthContext & {
+                body: { email: string; password: string };
+            },
+        ) => {
+            const {
+                body: { email, password },
+                jwt,
+                cookie,
+                set,
+            } = ctx;
             try {
                 const [user] = await db
                     .select()
@@ -64,7 +89,11 @@ export const authRoutes = new Elysia()
                 }
 
                 const token = await jwt.sign({ userId: user.id });
-                cookie.jwt.set({ value: token, httpOnly: true, maxAge: 60 * 60 * 24 });
+                cookie.jwt!.set!({
+                    value: token,
+                    httpOnly: true,
+                    maxAge: 60 * 60 * 24,
+                });
 
                 const { password: _, salt: __, ...publicUser } = user;
                 return publicUser;
@@ -77,7 +106,7 @@ export const authRoutes = new Elysia()
         { body: loginSchema },
     )
     // Logout
-    .post("/logout", ({ cookie }) => {
-        cookie.jwt.remove();
+    .post("/logout", (ctx: AuthContext) => {
+        ctx.cookie.jwt!.remove!();
         return { message: "Logout realizado com sucesso" };
     });

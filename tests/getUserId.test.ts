@@ -5,10 +5,11 @@ import { getUserId } from "../src/utils/get-user-id";
 const secret = new TextEncoder().encode("secret");
 
 const jwt = {
-	verify: async (token: string) => {
-		const { payload } = await jwtVerify(token, secret);
-		return payload;
-	},
+        verify: async (token: string) => {
+                const { payload } = await jwtVerify(token, secret);
+                return payload;
+        },
+        sign: async () => "", // stub para compatibilidade com AuthContext
 };
 
 describe("getUserId", () => {

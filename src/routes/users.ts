@@ -4,6 +4,7 @@ import { db } from "../db";
 import { usersTable } from "../db/schema/users";
 import { userUpdateSchema } from "../schemas/user";
 import { getUserId } from "../utils/get-user-id";
+import type { AuthContext } from "../utils/get-user-id";
 
 export const userRoutes = new Elysia({ prefix: "/users" })
     .get("/", async ({ set }) => {
@@ -38,7 +39,19 @@ export const userRoutes = new Elysia({ prefix: "/users" })
     })
     .put(
         "/:id",
-        async ({ params: { id }, body: { username, email }, jwt, cookie, set }) => {
+        async (
+            ctx: AuthContext & {
+                params: { id: string };
+                body: { username?: string; email?: string };
+            },
+        ) => {
+            const {
+                params: { id },
+                body: { username, email },
+                jwt,
+                cookie,
+                set,
+            } = ctx;
             const userId = await getUserId({ jwt, cookie, set });
             if (!userId) {
                 return { error: "Autenticação necessária" };
@@ -69,7 +82,13 @@ export const userRoutes = new Elysia({ prefix: "/users" })
         },
         { body: userUpdateSchema },
     )
-    .delete("/:id", async ({ params: { id }, jwt, cookie, set }) => {
+    .delete("/:id", async (ctx: AuthContext & { params: { id: string } }) => {
+        const {
+            params: { id },
+            jwt,
+            cookie,
+            set,
+        } = ctx;
         const userId = await getUserId({ jwt, cookie, set });
         if (!userId) {
             return { error: "Autenticação necessária" };

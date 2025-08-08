@@ -3,11 +3,13 @@ import { and, eq } from "drizzle-orm";
 import { db } from "../db";
 import { todosTable } from "../db/schema/todos";
 import { todoCreateSchema, todoUpdateSchema } from "../schemas/todo";
-import { PriorityEnum } from "../types/priority";
+import { PriorityEnum, type Priority } from "../types/priority";
 import { getUserId } from "../utils/get-user-id";
+import type { AuthContext } from "../utils/get-user-id";
 
 export const todoRoutes = new Elysia({ prefix: "/todos" })
-    .get("/", async ({ jwt, cookie, set }) => {
+    .get("/", async (ctx: AuthContext) => {
+        const { jwt, cookie, set } = ctx;
         const userId = await getUserId({ jwt, cookie, set });
         if (!userId) {
             return { error: "Autenticação necessária" };
@@ -27,7 +29,17 @@ export const todoRoutes = new Elysia({ prefix: "/todos" })
     })
     .post(
         "/",
-        async ({ body: { description, priority }, jwt, cookie, set }) => {
+        async (
+            ctx: AuthContext & {
+                body: { description: string; priority?: Priority };
+            },
+        ) => {
+            const {
+                body: { description, priority },
+                jwt,
+                cookie,
+                set,
+            } = ctx;
             const userId = await getUserId({ jwt, cookie, set });
             if (!userId) {
                 return { error: "Autenticação necessária" };
@@ -51,7 +63,13 @@ export const todoRoutes = new Elysia({ prefix: "/todos" })
         },
         { body: todoCreateSchema },
     )
-    .get("/:id", async ({ params: { id }, jwt, cookie, set }) => {
+    .get("/:id", async (ctx: AuthContext & { params: { id: string } }) => {
+        const {
+            params: { id },
+            jwt,
+            cookie,
+            set,
+        } = ctx;
         const userId = await getUserId({ jwt, cookie, set });
         if (!userId) {
             return { error: "Autenticação necessária" };
@@ -76,7 +94,17 @@ export const todoRoutes = new Elysia({ prefix: "/todos" })
     })
     .put(
         "/:id",
-        async ({ params: { id }, body, jwt, cookie, set }) => {
+        async (
+            ctx: AuthContext & {
+                params: { id: string };
+                body: {
+                    description?: string;
+                    priority?: Priority;
+                    done?: boolean;
+                };
+            },
+        ) => {
+            const { params: { id }, body, jwt, cookie, set } = ctx;
             const userId = await getUserId({ jwt, cookie, set });
             if (!userId) {
                 return { error: "Autenticação necessária" };
@@ -105,7 +133,13 @@ export const todoRoutes = new Elysia({ prefix: "/todos" })
         },
         { body: todoUpdateSchema },
     )
-    .delete("/:id", async ({ params: { id }, jwt, cookie, set }) => {
+    .delete("/:id", async (ctx: AuthContext & { params: { id: string } }) => {
+        const {
+            params: { id },
+            jwt,
+            cookie,
+            set,
+        } = ctx;
         const userId = await getUserId({ jwt, cookie, set });
         if (!userId) {
             return { error: "Autenticação necessária" };

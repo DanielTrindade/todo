@@ -1,6 +1,16 @@
 export interface AuthContext {
-    jwt: { verify(token: string): Promise<unknown> };
-    cookie: Record<string, { value?: string }>;
+    jwt: {
+        verify(token: string): Promise<unknown>;
+        sign(payload: unknown): Promise<string>;
+    };
+    cookie: Record<
+        string,
+        {
+            value?: string;
+            set?: (opts: Record<string, unknown>) => void;
+            remove?: () => void;
+        }
+    >;
     set: { status?: number | string };
 }
 
