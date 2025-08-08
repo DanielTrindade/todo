@@ -58,8 +58,7 @@ export const authRoutes = new Elysia()
 		{
 			body: userSchema,
 			detail: {
-				tags: ["Auth"],
-				summary: "Register a new user",
+				tags: ['Auth']
 			},
 		},
 	)
@@ -112,8 +111,7 @@ export const authRoutes = new Elysia()
 		{
 			body: loginSchema,
 			detail: {
-				tags: ["Auth"],
-				summary: "Authenticate user",
+				tags: ["Auth"]
 			},
 		},
 	)
@@ -126,8 +124,7 @@ export const authRoutes = new Elysia()
 		},
 		{
 			detail: {
-				tags: ["Auth"],
-				summary: "Logout user",
+				tags: ["Auth"]
 			},
 		},
 	);
