@@ -8,25 +8,34 @@ import type { AuthContext } from "../utils/get-user-id";
 import { getUserId } from "../utils/get-user-id";
 
 export const todoRoutes = new Elysia({ prefix: "/todos" })
-	.get("/", async (ctx: AuthContext) => {
-		const { jwt, cookie, set } = ctx;
-		const userId = await getUserId({ jwt, cookie, set });
-		if (!userId) {
-			return { error: "Autenticação necessária" };
-		}
+	.get(
+		"/",
+		async (ctx: AuthContext) => {
+			const { jwt, cookie, set } = ctx;
+			const userId = await getUserId({ jwt, cookie, set });
+			if (!userId) {
+				return { error: "Autenticação necessária" };
+			}
 
-		try {
-			const todos = await db
-				.select()
-				.from(todosTable)
-				.where(eq(todosTable.userId, userId));
-			return todos;
-		} catch (error) {
-			console.error("Erro ao buscar todos:", error);
-			set.status = 500;
-			return { error: "Erro interno do servidor" };
-		}
-	})
+			try {
+				const todos = await db
+					.select()
+					.from(todosTable)
+					.where(eq(todosTable.userId, userId));
+				return todos;
+			} catch (error) {
+				console.error("Erro ao buscar todos:", error);
+				set.status = 500;
+				return { error: "Erro interno do servidor" };
+			}
+		},
+		{
+			detail: {
+				tags: ["Todos"],
+				summary: "List todos",
+			},
+		},
+	)
 	.post(
 		"/",
 		async (
@@ -61,37 +70,52 @@ export const todoRoutes = new Elysia({ prefix: "/todos" })
 				return { error: "Erro interno do servidor" };
 			}
 		},
-		{ body: todoCreateSchema },
+		{
+			body: todoCreateSchema,
+			detail: {
+				tags: ["Todos"],
+				summary: "Create todo",
+			},
+		},
 	)
-	.get("/:id", async (ctx: AuthContext & { params: { id: string } }) => {
-		const {
-			params: { id },
-			jwt,
-			cookie,
-			set,
-		} = ctx;
-		const userId = await getUserId({ jwt, cookie, set });
-		if (!userId) {
-			return { error: "Autenticação necessária" };
-		}
-
-		try {
-			const [todo] = await db
-				.select()
-				.from(todosTable)
-				.where(and(eq(todosTable.id, id), eq(todosTable.userId, userId)));
-
-			if (!todo) {
-				set.status = 404;
-				return { error: "Todo não encontrado" };
+	.get(
+		"/:id",
+		async (ctx: AuthContext & { params: { id: string } }) => {
+			const {
+				params: { id },
+				jwt,
+				cookie,
+				set,
+			} = ctx;
+			const userId = await getUserId({ jwt, cookie, set });
+			if (!userId) {
+				return { error: "Autenticação necessária" };
 			}
-			return todo;
-		} catch (error) {
-			console.error("Erro ao buscar todo:", error);
-			set.status = 500;
-			return { error: "Erro interno do servidor" };
-		}
-	})
+
+			try {
+				const [todo] = await db
+					.select()
+					.from(todosTable)
+					.where(and(eq(todosTable.id, id), eq(todosTable.userId, userId)));
+
+				if (!todo) {
+					set.status = 404;
+					return { error: "Todo não encontrado" };
+				}
+				return todo;
+			} catch (error) {
+				console.error("Erro ao buscar todo:", error);
+				set.status = 500;
+				return { error: "Erro interno do servidor" };
+			}
+		},
+		{
+			detail: {
+				tags: ["Todos"],
+				summary: "Get todo",
+			},
+		},
+	)
 	.put(
 		"/:id",
 		async (
@@ -137,33 +161,48 @@ export const todoRoutes = new Elysia({ prefix: "/todos" })
 				return { error: "Erro interno do servidor" };
 			}
 		},
-		{ body: todoUpdateSchema },
+		{
+			body: todoUpdateSchema,
+			detail: {
+				tags: ["Todos"],
+				summary: "Update todo",
+			},
+		},
 	)
-	.delete("/:id", async (ctx: AuthContext & { params: { id: string } }) => {
-		const {
-			params: { id },
-			jwt,
-			cookie,
-			set,
-		} = ctx;
-		const userId = await getUserId({ jwt, cookie, set });
-		if (!userId) {
-			return { error: "Autenticação necessária" };
-		}
-
-		try {
-			const result = await db
-				.delete(todosTable)
-				.where(and(eq(todosTable.id, id), eq(todosTable.userId, userId)));
-
-			if (result.count === 0) {
-				set.status = 404;
-				return { error: "Todo não encontrado" };
+	.delete(
+		"/:id",
+		async (ctx: AuthContext & { params: { id: string } }) => {
+			const {
+				params: { id },
+				jwt,
+				cookie,
+				set,
+			} = ctx;
+			const userId = await getUserId({ jwt, cookie, set });
+			if (!userId) {
+				return { error: "Autenticação necessária" };
 			}
-			return { message: "Todo deletado com sucesso" };
-		} catch (error) {
-			console.error("Erro ao deletar todo:", error);
-			set.status = 500;
-			return { error: "Erro interno do servidor" };
-		}
-	});
+
+			try {
+				const result = await db
+					.delete(todosTable)
+					.where(and(eq(todosTable.id, id), eq(todosTable.userId, userId)));
+
+				if (result.count === 0) {
+					set.status = 404;
+					return { error: "Todo não encontrado" };
+				}
+				return { message: "Todo deletado com sucesso" };
+			} catch (error) {
+				console.error("Erro ao deletar todo:", error);
+				set.status = 500;
+				return { error: "Erro interno do servidor" };
+			}
+		},
+		{
+			detail: {
+				tags: ["Todos"],
+				summary: "Delete todo",
+			},
+		},
+	);

@@ -55,7 +55,12 @@ export const authRoutes = new Elysia()
 				return { error: "Erro interno do servidor" };
 			}
 		},
-		{ body: userSchema },
+		{
+			body: userSchema,
+			detail: {
+				tags: ['Auth']
+			},
+		},
 	)
 	// Login
 	.post(
@@ -103,10 +108,23 @@ export const authRoutes = new Elysia()
 				return { error: "Erro interno do servidor" };
 			}
 		},
-		{ body: loginSchema },
+		{
+			body: loginSchema,
+			detail: {
+				tags: ["Auth"]
+			},
+		},
 	)
 	// Logout
-	.post("/logout", (ctx: AuthContext) => {
-		ctx.cookie.jwt?.remove?.();
-		return { message: "Logout realizado com sucesso" };
-	});
+	.post(
+		"/logout",
+		(ctx: AuthContext) => {
+			ctx.cookie.jwt?.remove?.();
+			return { message: "Logout realizado com sucesso" };
+		},
+		{
+			detail: {
+				tags: ["Auth"]
+			},
+		},
+	);
