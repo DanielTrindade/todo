@@ -1,4 +1,4 @@
-# Elysia with Bun runtime
+# Todo APP - Elysia with Bun runtime
 
 ## Getting Started
 1. **Install dependencies**
