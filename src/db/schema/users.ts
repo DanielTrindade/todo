@@ -13,7 +13,7 @@ export const usersTable = pgTable(
 		password: text("password").notNull(),
 		salt: varchar("salt", { length: 64 }).notNull().default(""),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
-		updatedAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	},
 	(table) => [
 		index("users_email_idx").on(table.email),
@@ -26,7 +26,7 @@ export const usersTable = pgTable(
  * é uma relação de que cada usuário pode ter o ou mais todo
  */
 export const usersTableRelations = relations(usersTable, ({ many }) => ({
-    todos: many(todosTable),
+	todos: many(todosTable),
 }));
 
 export type User = typeof usersTable.$inferSelect;
