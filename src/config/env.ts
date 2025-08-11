@@ -9,8 +9,8 @@ if (!process.env.COOKIE_SECRET) {
 }
 
 export const env = {
-    DATABASE_URL: process.env.DATABASE_URL!,
-    JWT_SECRET: process.env.JWT_SECRET!,
-    COOKIE_SECRET: process.env.COOKIE_SECRET!,
+    DATABASE_URL: process.env.DATABASE_URL,
+    JWT_SECRET: process.env.JWT_SECRET,
+    COOKIE_SECRET: process.env.COOKIE_SECRET,
     PORT: process.env.PORT ? parseInt(process.env.PORT) : 3000,
 };
