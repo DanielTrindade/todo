@@ -5,7 +5,27 @@ import { env } from "../config/env";
 import { db } from "../db";
 import { usersTable } from "../db/schema/users";
 import { loginSchema, userSchema } from "../schemas/user";
+import { CSRF_COOKIE_NAME, createCsrfToken } from "../utils/csrf";
 import type { AuthContext } from "../utils/get-user-id";
+
+const isSecure = process.env.NODE_ENV !== "development";
+
+const sharedCookieOptions = {
+        maxAge: env.SESSION_TTL_SECONDS,
+        path: "/" as const,
+        sameSite: "lax" as const,
+        secure: isSecure,
+};
+
+const sessionCookieOptions = {
+        ...sharedCookieOptions,
+        httpOnly: true,
+};
+
+const csrfCookieOptions = {
+        ...sharedCookieOptions,
+        httpOnly: false,
+};
 
 export const authRoutes = new Elysia()
 	// Registro
@@ -44,10 +64,14 @@ export const authRoutes = new Elysia()
                                 const exp =
                                         Math.floor(Date.now() / 1000) + env.SESSION_TTL_SECONDS;
                                 const token = await jwt.sign({ userId: newUser.id, exp });
+                                const csrfToken = createCsrfToken();
                                 cookie.jwt?.set?.({
                                         value: token,
-                                        httpOnly: true,
-                                        maxAge: env.SESSION_TTL_SECONDS,
+                                        ...sessionCookieOptions,
+                                });
+                                cookie[CSRF_COOKIE_NAME]?.set?.({
+                                        value: csrfToken,
+                                        ...csrfCookieOptions,
                                 });
 
 				const { password: _, salt: __, ...publicUser } = newUser;
@@ -99,10 +123,14 @@ export const authRoutes = new Elysia()
                                 const exp =
                                         Math.floor(Date.now() / 1000) + env.SESSION_TTL_SECONDS;
                                 const token = await jwt.sign({ userId: user.id, exp });
+                                const csrfToken = createCsrfToken();
                                 cookie.jwt?.set?.({
                                         value: token,
-                                        httpOnly: true,
-                                        maxAge: env.SESSION_TTL_SECONDS,
+                                        ...sessionCookieOptions,
+                                });
+                                cookie[CSRF_COOKIE_NAME]?.set?.({
+                                        value: csrfToken,
+                                        ...csrfCookieOptions,
                                 });
 
 				const { password: _, salt: __, ...publicUser } = user;
@@ -123,8 +151,9 @@ export const authRoutes = new Elysia()
 	// Logout
 	.post(
 		"/logout",
-		(ctx: AuthContext) => {
-			ctx.cookie.jwt?.remove?.();
+                (ctx: AuthContext) => {
+                        ctx.cookie.jwt?.remove?.(sessionCookieOptions);
+                        ctx.cookie[CSRF_COOKIE_NAME]?.remove?.(csrfCookieOptions);
 			return { message: "Logout realizado com sucesso" };
 		},
 		{

@@ -3,6 +3,7 @@ import { Elysia } from "elysia";
 import { db } from "../db";
 import { usersTable } from "../db/schema/users";
 import { userUpdateSchema } from "../schemas/user";
+import { validateCsrfToken } from "../utils/csrf";
 import type { AuthContext } from "../utils/get-user-id";
 import { getUserId } from "../utils/get-user-id";
 
@@ -113,16 +114,20 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 			if (!userId) {
 				return { error: "Autenticação necessária" };
 			}
-			if (id !== userId) {
-				set.status = 403;
-				return { error: "Permissão negada" };
-			}
+                        if (id !== userId) {
+                                set.status = 403;
+                                return { error: "Permissão negada" };
+                        }
 
-			try {
-				const [updated] = await db
-					.update(usersTable)
-					.set({
-						...(username ? { username } : {}),
+                        if (!validateCsrfToken(ctx)) {
+                                return { error: "Token CSRF inválido" };
+                        }
+
+                        try {
+                                const [updated] = await db
+                                        .update(usersTable)
+                                        .set({
+                                                ...(username ? { username } : {}),
 						...(email ? { email } : {}),
 						updatedAt: new Date(),
 					})
@@ -158,14 +163,18 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 			if (!userId) {
 				return { error: "Autenticação necessária" };
 			}
-			if (id !== userId) {
-				set.status = 403;
-				return { error: "Permissão negada" };
-			}
+                        if (id !== userId) {
+                                set.status = 403;
+                                return { error: "Permissão negada" };
+                        }
 
-			try {
-				await db.delete(usersTable).where(eq(usersTable.id, id));
-				return { message: "Usuário e todos associados deletados" };
+                        if (!validateCsrfToken(ctx)) {
+                                return { error: "Token CSRF inválido" };
+                        }
+
+                        try {
+                                await db.delete(usersTable).where(eq(usersTable.id, id));
+                                return { message: "Usuário e todos associados deletados" };
 			} catch (error) {
 				console.error("Erro ao deletar usuário:", error);
 				set.status = 500;

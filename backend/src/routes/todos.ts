@@ -4,6 +4,7 @@ import { db } from "../db";
 import { todosTable } from "../db/schema/todos";
 import { todoCreateSchema, todoUpdateSchema } from "../schemas/todo";
 import { type Priority, PriorityEnum } from "../types/priority";
+import { validateCsrfToken } from "../utils/csrf";
 import type { AuthContext } from "../utils/get-user-id";
 import { getUserId } from "../utils/get-user-id";
 
@@ -12,14 +13,14 @@ export const todoRoutes = new Elysia({ prefix: "/todos" })
 		"/",
 		async (ctx: AuthContext) => {
 			const { jwt, cookie, set } = ctx;
-			const userId = await getUserId({ jwt, cookie, set });
-			if (!userId) {
-				return { error: "Autenticação necessária" };
-			}
+                        const userId = await getUserId({ jwt, cookie, set });
+                        if (!userId) {
+                                return { error: "Autenticação necessária" };
+                        }
 
-			try {
-				const todos = await db
-					.select()
+                        try {
+                                const todos = await db
+                                        .select()
 					.from(todosTable)
 					.where(eq(todosTable.userId, userId));
 				return todos;
@@ -49,10 +50,14 @@ export const todoRoutes = new Elysia({ prefix: "/todos" })
 				cookie,
 				set,
 			} = ctx;
-			const userId = await getUserId({ jwt, cookie, set });
-			if (!userId) {
-				return { error: "Autenticação necessária" };
-			}
+                        const userId = await getUserId({ jwt, cookie, set });
+                        if (!userId) {
+                                return { error: "Autenticação necessária" };
+                        }
+
+                        if (!validateCsrfToken(ctx)) {
+                                return { error: "Token CSRF inválido" };
+                        }
 
 			try {
 				const [todo] = await db
@@ -87,14 +92,14 @@ export const todoRoutes = new Elysia({ prefix: "/todos" })
 				cookie,
 				set,
 			} = ctx;
-			const userId = await getUserId({ jwt, cookie, set });
-			if (!userId) {
-				return { error: "Autenticação necessária" };
-			}
+                        const userId = await getUserId({ jwt, cookie, set });
+                        if (!userId) {
+                                return { error: "Autenticação necessária" };
+                        }
 
-			try {
-				const [todo] = await db
-					.select()
+                        try {
+                                const [todo] = await db
+                                        .select()
 					.from(todosTable)
 					.where(and(eq(todosTable.id, id), eq(todosTable.userId, userId)));
 
@@ -135,10 +140,14 @@ export const todoRoutes = new Elysia({ prefix: "/todos" })
 				cookie,
 				set,
 			} = ctx;
-			const userId = await getUserId({ jwt, cookie, set });
-			if (!userId) {
-				return { error: "Autenticação necessária" };
-			}
+                        const userId = await getUserId({ jwt, cookie, set });
+                        if (!userId) {
+                                return { error: "Autenticação necessária" };
+                        }
+
+                        if (!validateCsrfToken(ctx)) {
+                                return { error: "Token CSRF inválido" };
+                        }
 
 			try {
 				const [updated] = await db
@@ -178,10 +187,14 @@ export const todoRoutes = new Elysia({ prefix: "/todos" })
 				cookie,
 				set,
 			} = ctx;
-			const userId = await getUserId({ jwt, cookie, set });
-			if (!userId) {
-				return { error: "Autenticação necessária" };
-			}
+                        const userId = await getUserId({ jwt, cookie, set });
+                        if (!userId) {
+                                return { error: "Autenticação necessária" };
+                        }
+
+                        if (!validateCsrfToken(ctx)) {
+                                return { error: "Token CSRF inválido" };
+                        }
 
 			try {
 				const result = await db
