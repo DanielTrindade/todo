@@ -8,9 +8,10 @@ export interface AuthContext {
         {
             value?: string;
             set?: (opts: Record<string, unknown>) => void;
-            remove?: () => void;
+            remove?: (opts?: Record<string, unknown>) => void;
         }
     >;
+    request?: Request;
     set: { status?: number | string };
 }
 
