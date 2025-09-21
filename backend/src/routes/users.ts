@@ -128,17 +128,22 @@ export const userRoutes = new Elysia({ prefix: "/users" })
                                         .update(usersTable)
                                         .set({
                                                 ...(username ? { username } : {}),
-						...(email ? { email } : {}),
-						updatedAt: new Date(),
-					})
-					.where(eq(usersTable.id, id))
-					.returning();
+                                                ...(email ? { email } : {}),
+                                                updatedAt: new Date(),
+                                        })
+                                        .where(eq(usersTable.id, id))
+                                        .returning();
 
-				const { password: _password, salt: _salt, ...publicUser } = updated;
-				return publicUser;
-			} catch (error) {
-				console.error("Erro ao atualizar usuário:", error);
-				set.status = 500;
+                                if (!updated) {
+                                        set.status = 404;
+                                        return { error: "Usuário não encontrado" };
+                                }
+
+                                const { password: _password, salt: _salt, ...publicUser } = updated;
+                                return publicUser;
+                        } catch (error) {
+                                console.error("Erro ao atualizar usuário:", error);
+                                set.status = 500;
 				return { error: "Erro interno do servidor" };
 			}
 		},
@@ -173,12 +178,20 @@ export const userRoutes = new Elysia({ prefix: "/users" })
                         }
 
                         try {
-                                await db.delete(usersTable).where(eq(usersTable.id, id));
+                                const result = await db
+                                        .delete(usersTable)
+                                        .where(eq(usersTable.id, id));
+
+                                if (result.count === 0) {
+                                        set.status = 404;
+                                        return { error: "Usuário não encontrado" };
+                                }
+
                                 return { message: "Usuário e todos associados deletados" };
-			} catch (error) {
-				console.error("Erro ao deletar usuário:", error);
-				set.status = 500;
-				return { error: "Erro interno do servidor" };
+                        } catch (error) {
+                                console.error("Erro ao deletar usuário:", error);
+                                set.status = 500;
+                                return { error: "Erro interno do servidor" };
 			}
 		},
 		{
