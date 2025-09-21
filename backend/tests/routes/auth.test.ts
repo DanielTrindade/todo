@@ -1,6 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it, mock } from "bun:test";
 import { jwt as jwtPlugin } from "@elysiajs/jwt";
 import { Elysia } from "elysia";
+import { jwtVerify } from "jose";
 
 import { ensureTestEnv, resetEnv } from "../helpers/env";
 import { createDbMock } from "../helpers/mockDb";
@@ -32,6 +33,9 @@ beforeAll(async () => {
     resetEnv();
     authRoutes = (await import("../../src/routes/auth")).authRoutes;
 });
+
+const getSessionTtlSeconds = () =>
+    Number.parseInt(process.env.SESSION_TTL_SECONDS ?? "86400", 10);
 
 const createApp = () => {
     const cookieSecret = process.env.COOKIE_SECRET ?? "test-cookie-secret";
@@ -78,6 +82,7 @@ describe("authRoutes", () => {
 
         const app = createApp();
 
+        const before = Math.floor(Date.now() / 1000);
         const response = await app.handle(
             new Request("http://localhost/register", {
                 method: "POST",
@@ -89,10 +94,32 @@ describe("authRoutes", () => {
                 }),
             }),
         );
+        const after = Math.floor(Date.now() / 1000);
 
         expect(response.status).toBe(200);
         const setCookie = response.headers.get("set-cookie");
         expect(setCookie).toContain("jwt=");
+        const sessionTtlSeconds = getSessionTtlSeconds();
+        expect(setCookie).toContain(`Max-Age=${sessionTtlSeconds}`);
+
+        const token = setCookie?.match(/jwt=([^;]+)/)?.[1];
+        expect(token).toBeTruthy();
+
+        if (!token) {
+            throw new Error("JWT token not found in cookie");
+        }
+
+        const secret = new TextEncoder().encode(
+            process.env.JWT_SECRET ?? "test-jwt-secret",
+        );
+        const { payload } = await jwtVerify(token, secret);
+        expect(payload.userId).toBe("user-1");
+        if (!payload.exp) {
+            throw new Error("Token is missing exp claim");
+        }
+
+        expect(payload.exp).toBeGreaterThanOrEqual(before + sessionTtlSeconds);
+        expect(payload.exp).toBeLessThanOrEqual(after + sessionTtlSeconds);
 
         const body = await response.json();
         expect(body).toMatchObject({
@@ -148,6 +175,7 @@ describe("authRoutes", () => {
         ];
 
         const app = createApp();
+        const before = Math.floor(Date.now() / 1000);
         const response = await app.handle(
             new Request("http://localhost/login", {
                 method: "POST",
@@ -158,10 +186,32 @@ describe("authRoutes", () => {
                 }),
             }),
         );
+        const after = Math.floor(Date.now() / 1000);
 
         expect(response.status).toBe(200);
         const cookie = response.headers.get("set-cookie");
         expect(cookie).toContain("jwt=");
+        const sessionTtlSeconds = getSessionTtlSeconds();
+        expect(cookie).toContain(`Max-Age=${sessionTtlSeconds}`);
+
+        const token = cookie?.match(/jwt=([^;]+)/)?.[1];
+        expect(token).toBeTruthy();
+
+        if (!token) {
+            throw new Error("JWT token not found in cookie");
+        }
+
+        const secret = new TextEncoder().encode(
+            process.env.JWT_SECRET ?? "test-jwt-secret",
+        );
+        const { payload } = await jwtVerify(token, secret);
+        expect(payload.userId).toBe("user-2");
+        if (!payload.exp) {
+            throw new Error("Token is missing exp claim");
+        }
+
+        expect(payload.exp).toBeGreaterThanOrEqual(before + sessionTtlSeconds);
+        expect(payload.exp).toBeLessThanOrEqual(after + sessionTtlSeconds);
 
         const body = await response.json();
         expect(body).toMatchObject({

@@ -15,6 +15,7 @@
    DATABASE_URL=postgres://todo_user:todo_password@localhost:5432/todo_db
    JWT_SECRET=your_jwt_secret
    COOKIE_SECRET=your_cookie_secret
+   SESSION_TTL_SECONDS=86400 # optional, padrão: 24 horas
    PORT=3000 # optional
    ```
 4. **Run the server**
@@ -26,7 +27,7 @@
 ## Routes
 - `GET /health` – health check endpoint.
 - `POST /register` – create a new user.
-- `POST /login` – authenticate and receive a JWT cookie.
+- `POST /login` – authenticate and receive a JWT cookie válido por 24 horas (ajustável via `SESSION_TTL_SECONDS`).
 - `POST /logout` – clear the authentication cookie.
 - `/todos` – CRUD operations for todos (`GET`, `POST`, `GET /:id`, `PUT /:id`, `DELETE /:id`).
 - `/users` – user management (`GET`, `GET /:id`, `PUT /:id`, `DELETE /:id`).
