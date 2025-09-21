@@ -20,7 +20,9 @@ apiClient.interceptors.request.use((config) => {
       if (config.headers instanceof AxiosHeaders) {
         config.headers.set('x-csrf-token', csrfToken)
       } else {
-        config.headers = { ...(config.headers ?? {}), 'x-csrf-token': csrfToken }
+        if (typeof config.headers === 'object' && config.headers !== null) {
+          (config.headers as Record<string, string>)['x-csrf-token'] = csrfToken
+        }
       }
     }
   }

@@ -6,6 +6,7 @@ const store = createStore('cookie',{
   authName:'_auth',
   cookieDomain: window.location.hostname,
   cookieSecure: window.location.protocol === 'https:',
+  cookieSameSite: 'lax',
   debug: true
 })
 
