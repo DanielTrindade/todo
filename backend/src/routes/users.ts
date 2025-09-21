@@ -9,10 +9,27 @@ import { getUserId } from "../utils/get-user-id";
 export const userRoutes = new Elysia({ prefix: "/users" })
 	.get(
 		"/",
-		async ({ set }) => {
+		async (ctx: AuthContext) => {
+			const { jwt, cookie, set } = ctx;
+			const userId = await getUserId({ jwt, cookie, set });
+
+			if (!userId) {
+				return { error: "Autenticação necessária" };
+			}
+
 			try {
-				const users = await db.select().from(usersTable);
-				return users.map(({ password, salt, ...u }) => u);
+				const [user] = await db
+					.select()
+					.from(usersTable)
+					.where(eq(usersTable.id, userId));
+
+				if (!user) {
+					set.status = 404;
+					return { error: "Usuário não encontrado" };
+				}
+
+				const { password: _password, salt: _salt, ...publicUser } = user;
+				return publicUser;
 			} catch (error) {
 				console.error("Erro ao buscar usuários:", error);
 				set.status = 500;
@@ -22,18 +39,38 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 		{
 			detail: {
 				tags: ["Users"],
-				summary: "List users",
+				summary: "Get authenticated user profile",
+				description:
+					"Requer autenticação e retorna apenas o perfil associado à sessão válida.",
 			},
 		},
 	)
 	.get(
 		"/:id",
-		async ({ params: { id }, set }) => {
+		async (ctx: AuthContext & { params: { id: string } }) => {
+			const {
+				params: { id },
+				jwt,
+				cookie,
+				set,
+			} = ctx;
+
+			const userId = await getUserId({ jwt, cookie, set });
+
+			if (!userId) {
+				return { error: "Autenticação necessária" };
+			}
+
+			if (id !== userId) {
+				set.status = 403;
+				return { error: "Permissão negada" };
+			}
+
 			try {
 				const [user] = await db
 					.select()
 					.from(usersTable)
-					.where(eq(usersTable.id, id));
+					.where(eq(usersTable.id, userId));
 
 				if (!user) {
 					set.status = 404;
@@ -51,7 +88,9 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 		{
 			detail: {
 				tags: ["Users"],
-				summary: "Get user",
+				summary: "Get authenticated user by id",
+				description:
+					"Requer autenticação e retorna apenas o perfil autorizado correspondente ao identificador informado.",
 			},
 		},
 	)
