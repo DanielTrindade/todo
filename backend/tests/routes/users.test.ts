@@ -62,10 +62,10 @@ beforeEach(() => {
 });
 
 describe("userRoutes", () => {
-	it("lists users without sensitive fields", async () => {
-		const now = new Date("2024-01-07T00:00:00.000Z");
-		dbMock.state.selectResult = [
-			{
+        it("returns the authenticated user without sensitive fields", async () => {
+                const now = new Date("2024-01-07T00:00:00.000Z");
+                dbMock.state.selectResult = [
+                        {
 				id: "user-1",
 				username: "john",
 				email: "john@example.com",
@@ -77,20 +77,19 @@ describe("userRoutes", () => {
 		];
 
 		const app = createApp();
-		const response = await app.handle(
-			new Request("http://localhost/users/", { method: "GET" }),
-		);
+                const response = await app.handle(
+                        new Request("http://localhost/users/", { method: "GET" }),
+                );
 
-		expect(response.status).toBe(200);
-		const body = await response.json();
-		expect(body).toHaveLength(1);
-		expect(body[0]).toMatchObject({
-			id: "user-1",
-			email: "john@example.com",
-		});
-		expect(body[0].password).toBeUndefined();
-		expect(body[0].salt).toBeUndefined();
-	});
+                expect(response.status).toBe(200);
+                const body = await response.json();
+                expect(body).toMatchObject({
+                        id: "user-1",
+                        email: "john@example.com",
+                });
+                expect(body.password).toBeUndefined();
+                expect(body.salt).toBeUndefined();
+        });
 
 	it("returns a user by id", async () => {
 		const now = new Date("2024-01-08T00:00:00.000Z");
@@ -121,12 +120,13 @@ describe("userRoutes", () => {
 		expect(body.salt).toBeUndefined();
 	});
 
-	it("returns 404 when user is missing", async () => {
-		dbMock.state.selectWhereResult = [];
+        it("returns 404 when user is missing", async () => {
+                dbMock.state.selectWhereResult = [];
+                mockedUserId = "missing";
 
-		const app = createApp();
-		const response = await app.handle(
-			new Request("http://localhost/users/missing", { method: "GET" }),
+                const app = createApp();
+                const response = await app.handle(
+                        new Request("http://localhost/users/missing", { method: "GET" }),
 		);
 
 		expect(response.status).toBe(404);

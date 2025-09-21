@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { Elysia } from "elysia";
+import { env } from "../config/env";
 import { db } from "../db";
 import { usersTable } from "../db/schema/users";
 import { loginSchema, userSchema } from "../schemas/user";
@@ -40,12 +41,14 @@ export const authRoutes = new Elysia()
 					.values({ username, email, password: hash, salt })
 					.returning();
 
-				const token = await jwt.sign({ userId: newUser.id });
-				cookie.jwt?.set?.({
-					value: token,
-					httpOnly: true,
-					maxAge: 60 * 60 * 24,
-				});
+                                const exp =
+                                        Math.floor(Date.now() / 1000) + env.SESSION_TTL_SECONDS;
+                                const token = await jwt.sign({ userId: newUser.id, exp });
+                                cookie.jwt?.set?.({
+                                        value: token,
+                                        httpOnly: true,
+                                        maxAge: env.SESSION_TTL_SECONDS,
+                                });
 
 				const { password: _, salt: __, ...publicUser } = newUser;
 				return publicUser;
@@ -93,12 +96,14 @@ export const authRoutes = new Elysia()
 					return { error: "Credenciais inválidas" };
 				}
 
-				const token = await jwt.sign({ userId: user.id });
-				cookie.jwt?.set?.({
-					value: token,
-					httpOnly: true,
-					maxAge: 60 * 60 * 24,
-				});
+                                const exp =
+                                        Math.floor(Date.now() / 1000) + env.SESSION_TTL_SECONDS;
+                                const token = await jwt.sign({ userId: user.id, exp });
+                                cookie.jwt?.set?.({
+                                        value: token,
+                                        httpOnly: true,
+                                        maxAge: env.SESSION_TTL_SECONDS,
+                                });
 
 				const { password: _, salt: __, ...publicUser } = user;
 				return publicUser;
