@@ -4,6 +4,7 @@ import { client } from "./db";
 
 const server = app.listen(env.PORT, () => {
     console.log(`🚀 Server rodando em http://localhost:${env.PORT}`);
+    console.log(`📖 documentação da API em http://localhost:${env.PORT}/v1/swagger`)
 });
 
 process.on("SIGTERM", async () => {
