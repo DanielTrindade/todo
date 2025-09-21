@@ -175,11 +175,11 @@ describe("userRoutes", () => {
 		expect(body).toEqual({ error: "Permissão negada" });
 	});
 
-	it("updates current user", async () => {
-		const now = new Date("2024-01-09T00:00:00.000Z");
-		dbMock.state.updateResult = [
-			{
-				id: "user-1",
+        it("updates current user", async () => {
+                const now = new Date("2024-01-09T00:00:00.000Z");
+                dbMock.state.updateResult = [
+                        {
+                                id: "user-1",
 				username: "new",
 				email: "john@example.com",
 				password: "secret",
@@ -207,14 +207,34 @@ describe("userRoutes", () => {
 			id: "user-1",
 			username: "new",
 		});
-		expect(body.password).toBeUndefined();
-		expect(body.salt).toBeUndefined();
-	});
+                expect(body.password).toBeUndefined();
+                expect(body.salt).toBeUndefined();
+        });
 
-	it("rejects delete when ids mismatch", async () => {
-		mockedUserId = "user-2";
+        it("returns 404 when trying to update a missing user", async () => {
+                dbMock.state.updateResult = [];
 
-		const app = createApp();
+                const app = createApp();
+                const response = await app.handle(
+                        new Request(
+                                "http://localhost/users/user-1",
+                                withCsrf({
+                                        method: "PUT",
+                                        headers: { "content-type": "application/json" },
+                                        body: JSON.stringify({ username: "ghost" }),
+                                }),
+                        ),
+                );
+
+                expect(response.status).toBe(404);
+                const body = await response.json();
+                expect(body).toEqual({ error: "Usuário não encontrado" });
+        });
+
+        it("rejects delete when ids mismatch", async () => {
+                mockedUserId = "user-2";
+
+                const app = createApp();
                 const response = await app.handle(
                         new Request(
                                 "http://localhost/users/user-1",
@@ -238,8 +258,24 @@ describe("userRoutes", () => {
                         ),
                 );
 
-		expect(response.status).toBe(200);
-		const body = await response.json();
-		expect(body).toEqual({ message: "Usuário e todos associados deletados" });
-	});
+                expect(response.status).toBe(200);
+                const body = await response.json();
+                expect(body).toEqual({ message: "Usuário e todos associados deletados" });
+        });
+
+        it("returns 404 when trying to delete a missing user", async () => {
+                dbMock.state.deleteResult = { count: 0 };
+
+                const app = createApp();
+                const response = await app.handle(
+                        new Request(
+                                "http://localhost/users/user-1",
+                                withCsrf({ method: "DELETE" }),
+                        ),
+                );
+
+                expect(response.status).toBe(404);
+                const body = await response.json();
+                expect(body).toEqual({ error: "Usuário não encontrado" });
+        });
 });
