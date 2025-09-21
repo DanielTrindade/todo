@@ -3,6 +3,7 @@ import { jwt as jwtPlugin } from "@elysiajs/jwt";
 import { Elysia } from "elysia";
 
 import { ensureTestEnv, resetEnv } from "../helpers/env";
+import { withCsrf } from "../helpers/csrf";
 import { createDbMock } from "../helpers/mockDb";
 
 ensureTestEnv();
@@ -138,13 +139,16 @@ describe("userRoutes", () => {
 		mockedUserId = undefined;
 
 		const app = createApp();
-		const response = await app.handle(
-			new Request("http://localhost/users/user-1", {
-				method: "PUT",
-				headers: { "content-type": "application/json" },
-				body: JSON.stringify({ username: "new" }),
-			}),
-		);
+                const response = await app.handle(
+                        new Request(
+                                "http://localhost/users/user-1",
+                                withCsrf({
+                                        method: "PUT",
+                                        headers: { "content-type": "application/json" },
+                                        body: JSON.stringify({ username: "new" }),
+                                }),
+                        ),
+                );
 
 		expect(response.status).toBe(401);
 		const body = await response.json();
@@ -155,13 +159,16 @@ describe("userRoutes", () => {
 		mockedUserId = "user-2";
 
 		const app = createApp();
-		const response = await app.handle(
-			new Request("http://localhost/users/user-1", {
-				method: "PUT",
-				headers: { "content-type": "application/json" },
-				body: JSON.stringify({ username: "new" }),
-			}),
-		);
+                const response = await app.handle(
+                        new Request(
+                                "http://localhost/users/user-1",
+                                withCsrf({
+                                        method: "PUT",
+                                        headers: { "content-type": "application/json" },
+                                        body: JSON.stringify({ username: "new" }),
+                                }),
+                        ),
+                );
 
 		expect(response.status).toBe(403);
 		const body = await response.json();
@@ -183,13 +190,16 @@ describe("userRoutes", () => {
 		];
 
 		const app = createApp();
-		const response = await app.handle(
-			new Request("http://localhost/users/user-1", {
-				method: "PUT",
-				headers: { "content-type": "application/json" },
-				body: JSON.stringify({ username: "new" }),
-			}),
-		);
+                const response = await app.handle(
+                        new Request(
+                                "http://localhost/users/user-1",
+                                withCsrf({
+                                        method: "PUT",
+                                        headers: { "content-type": "application/json" },
+                                        body: JSON.stringify({ username: "new" }),
+                                }),
+                        ),
+                );
 
 		expect(response.status).toBe(200);
 		const body = await response.json();
@@ -205,9 +215,12 @@ describe("userRoutes", () => {
 		mockedUserId = "user-2";
 
 		const app = createApp();
-		const response = await app.handle(
-			new Request("http://localhost/users/user-1", { method: "DELETE" }),
-		);
+                const response = await app.handle(
+                        new Request(
+                                "http://localhost/users/user-1",
+                                withCsrf({ method: "DELETE" }),
+                        ),
+                );
 
 		expect(response.status).toBe(403);
 		const body = await response.json();
@@ -218,9 +231,12 @@ describe("userRoutes", () => {
 		dbMock.state.deleteResult = { count: 1 };
 
 		const app = createApp();
-		const response = await app.handle(
-			new Request("http://localhost/users/user-1", { method: "DELETE" }),
-		);
+                const response = await app.handle(
+                        new Request(
+                                "http://localhost/users/user-1",
+                                withCsrf({ method: "DELETE" }),
+                        ),
+                );
 
 		expect(response.status).toBe(200);
 		const body = await response.json();

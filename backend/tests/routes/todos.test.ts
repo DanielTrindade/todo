@@ -3,6 +3,7 @@ import { jwt as jwtPlugin } from "@elysiajs/jwt";
 import { Elysia } from "elysia";
 import { PriorityEnum } from "../../src/types/priority";
 import { ensureTestEnv, resetEnv } from "../helpers/env";
+import { withCsrf } from "../helpers/csrf";
 import { createDbMock } from "../helpers/mockDb";
 
 ensureTestEnv();
@@ -119,13 +120,16 @@ describe("todoRoutes", () => {
 		];
 
 		const app = createApp();
-		const response = await app.handle(
-			new Request("http://localhost/todos/", {
-				method: "POST",
-				headers: { "content-type": "application/json" },
-				body: JSON.stringify({ description: "Write docs" }),
-			}),
-		);
+                const response = await app.handle(
+                        new Request(
+                                "http://localhost/todos/",
+                                withCsrf({
+                                        method: "POST",
+                                        headers: { "content-type": "application/json" },
+                                        body: JSON.stringify({ description: "Write docs" }),
+                                }),
+                        ),
+                );
 
 		expect(response.status).toBe(200);
 		const body = await response.json();
@@ -192,16 +196,19 @@ describe("todoRoutes", () => {
 		];
 
 		const app = createApp();
-		const response = await app.handle(
-			new Request("http://localhost/todos/todo-4", {
-				method: "PUT",
-				headers: { "content-type": "application/json" },
-				body: JSON.stringify({
-					description: "Refined description",
-					done: true,
-				}),
-			}),
-		);
+                const response = await app.handle(
+                        new Request(
+                                "http://localhost/todos/todo-4",
+                                withCsrf({
+                                        method: "PUT",
+                                        headers: { "content-type": "application/json" },
+                                        body: JSON.stringify({
+                                                description: "Refined description",
+                                                done: true,
+                                        }),
+                                }),
+                        ),
+                );
 
 		expect(response.status).toBe(200);
 		const body = await response.json();
@@ -216,13 +223,16 @@ describe("todoRoutes", () => {
 		dbMock.state.updateResult = [];
 
 		const app = createApp();
-		const response = await app.handle(
-			new Request("http://localhost/todos/missing", {
-				method: "PUT",
-				headers: { "content-type": "application/json" },
-				body: JSON.stringify({ description: "Does not exist" }),
-			}),
-		);
+                const response = await app.handle(
+                        new Request(
+                                "http://localhost/todos/missing",
+                                withCsrf({
+                                        method: "PUT",
+                                        headers: { "content-type": "application/json" },
+                                        body: JSON.stringify({ description: "Does not exist" }),
+                                }),
+                        ),
+                );
 
 		expect(response.status).toBe(404);
 		const body = await response.json();
@@ -233,9 +243,12 @@ describe("todoRoutes", () => {
 		dbMock.state.deleteResult = { count: 1 };
 
 		const app = createApp();
-		const response = await app.handle(
-			new Request("http://localhost/todos/todo-5", { method: "DELETE" }),
-		);
+                const response = await app.handle(
+                        new Request(
+                                "http://localhost/todos/todo-5",
+                                withCsrf({ method: "DELETE" }),
+                        ),
+                );
 
 		expect(response.status).toBe(200);
 		const body = await response.json();
@@ -246,9 +259,12 @@ describe("todoRoutes", () => {
 		dbMock.state.deleteResult = { count: 0 };
 
 		const app = createApp();
-		const response = await app.handle(
-			new Request("http://localhost/todos/missing", { method: "DELETE" }),
-		);
+                const response = await app.handle(
+                        new Request(
+                                "http://localhost/todos/missing",
+                                withCsrf({ method: "DELETE" }),
+                        ),
+                );
 
 		expect(response.status).toBe(404);
 		const body = await response.json();
