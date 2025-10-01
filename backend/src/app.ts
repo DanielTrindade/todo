@@ -56,5 +56,4 @@ export const app = new Elysia({
     .use(todoRoutes)
     .use(userRoutes);
 
-export default app;
 
