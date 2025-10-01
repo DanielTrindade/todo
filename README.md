@@ -15,7 +15,7 @@
    DATABASE_URL=postgres://todo_user:todo_password@localhost:5432/todo_db
    JWT_SECRET=your_jwt_secret
    COOKIE_SECRET=your_cookie_secret
-   SESSION_TTL_SECONDS=86400 # optional, padr�o: 24 horas
+   SESSION_TTL_SECONDS=86400 # optional, padrão: 24 horas
    PORT=3000 # optional
    ```
 4. **Sync the database schema**
@@ -28,17 +28,17 @@
    ```bash
    bun run dev
    ```
-   A API ficar� dispon�vel em http://localhost:3000.
+   A API ficará disponível em http://localhost:3000.
 
 ## Database workflow
-- `bun run db:push` - aplica o schema definido no c�digo diretamente no banco usando Drizzle.
+- `bun run db:push` - aplica o schema definido no código diretamente no banco usando Drizzle.
 - `bun run db:pull` - lê o estado atual do banco e atualiza os artefatos gerados (ex.: `drizzle/schema.ts`).
-- `bun run db:sync` - executa `push` seguido de `pull` para manter c�digo e banco alinhados.
+- `bun run db:sync` - executa `push` seguido de `pull` para manter código e banco alinhados.
 
 ## Routes
 - `GET /health` - health check endpoint.
 - `POST /register` - create a new user.
-- `POST /login` - authenticate and receive a JWT cookie válido por 24 horas (ajust�vel via `SESSION_TTL_SECONDS`).
+- `POST /login` - authenticate and receive a JWT cookie válido por 24 horas (ajustável via `SESSION_TTL_SECONDS`).
 - `POST /logout` - clear the authentication cookie.
 - `/todos` - CRUD operations for todos (`GET`, `POST`, `GET /:id`, `PUT /:id`, `DELETE /:id`).
 - `/users` - user management (`GET`, `GET /:id`, `PUT /:id`, `DELETE /:id`).
