@@ -3,7 +3,10 @@
   "version": "1.0.50",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "bun run --watch src/index.ts"
+    "dev": "bun --watch --hot src/index.ts",
+    "db:push": "bunx drizzle-kit push",
+    "db:pull": "bunx drizzle-kit pull",
+    "db:sync": "bunx drizzle-kit push && bunx drizzle-kit pull"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.0.0",
@@ -28,4 +31,3 @@
   },
   "module": "src/index.js"
 }
-

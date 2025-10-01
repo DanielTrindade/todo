@@ -1,0 +1,90 @@
+name: todo-dev
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: todo-dev-db
+    environment:
+      POSTGRES_USER: todo_user
+      POSTGRES_PASSWORD: todo_password
+      POSTGRES_DB: todo_db
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U todo_user -d todo_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    mem_limit: 512m
+    logging:
+      options:
+        max-size: "10m"
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: todo-dev-backend
+    environment:
+      DATABASE_URL: postgres://todo_user:todo_password@db:5432/todo_db
+      JWT_SECRET: jwt_secret
+      COOKIE_SECRET: cookie_secret
+      PORT: 3000
+      CORS_ORIGINS: http://localhost:5173
+      CHOKIDAR_USEPOLLING: 'true'
+      CHOKIDAR_INTERVAL: 500
+      BUN_WATCHER_USE_POLLING: '1'
+      BUN_WATCHER_POLL_INTERVAL: 300
+      BUN_WATCHER_THROTTLE: 10
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - backend_node_modules:/app/node_modules
+      - backend_bun_cache:/root/.bun
+    depends_on:
+      db:
+        condition: service_healthy
+    command: sh -c "bun install --frozen-lockfile && bun run db:push && bun run dev"
+    mem_limit: 512m
+    cpus: 1.0
+    init: true
+    logging:
+      options:
+        max-size: "10m"
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: todo-dev-frontend
+    environment:
+      VITE_API_URL: http://localhost:3000
+      HOST: 0.0.0.0
+      PORT: 5173
+      CHOKIDAR_USEPOLLING: 'true'
+      WATCHPACK_POLLING: 'true'
+      VITE_HMR_HOST: localhost
+      VITE_HMR_PORT: 5173
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    depends_on:
+      backend:
+        condition: service_started
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    mem_limit: 384m
+    cpus: 1.0
+    init: true
+    logging:
+      options:
+        max-size: "10m"
+
+volumes:
+  db_data:
+  backend_node_modules:
+  backend_bun_cache:
+  frontend_node_modules:
